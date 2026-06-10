@@ -549,7 +549,6 @@ tables:
 # ═══════════════════════════════════════════════════════════════════
 relationships:
   - name: museum_to_zoo_monthly
-    description: 博物館と動植物園を年度・月次で結合（動植物園はユニークキーを持つ）
     left_table: T18172_MUSEUM_VISITORS_MONTHLY
     right_table: T18201_ZOO_MONTHLY_OVERVIEW
     join_type: left
