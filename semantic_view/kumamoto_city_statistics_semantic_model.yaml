@@ -551,7 +551,7 @@ relationships:
   - name: museum_to_zoo_monthly
     left_table: T18172_MUSEUM_VISITORS_MONTHLY
     right_table: T18201_ZOO_MONTHLY_OVERVIEW
-    join_type: left
+    join_type: inner
     relationship_type: many_to_one
     relationship_columns:
       - left_column: NIANDU
