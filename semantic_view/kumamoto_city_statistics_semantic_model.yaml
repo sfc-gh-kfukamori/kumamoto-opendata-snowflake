@@ -1,577 +1,713 @@
 name: kumamoto_city_statistics
-description: >
-  熊本市の各種統計データを自然言語で問い合わせるためのセマンティックビュー。
-  人口動態・交通（市電・空港）・防災（火災・交通事故）・文化施設（博物館・動植物園）・
-  環境（ごみ処理・水道）・経済（家計支出・求人）など、多岐にわたる月次統計データを
-  横断的に分析できる。データソース: 熊本市オープンデータカタログ（BODIK ODCS）。
-
+description: |
+  熊本市の各種統計データを自然言語で問い合わせるためのセマンティックビュー。 人口動態・交通（市電・空港）・防災（火災・交通事故）・文化施設（博物館・動植物園）・ 環境（ごみ処理・水道）・経済（家計支出・求人）など、多岐にわたる月次統計データを 横断的に分析できる。データソース: 熊本市オープンデータカタログ（BODIK ODCS）。
 tables:
-
-  # ═══════════════════════════════════════════════════════════════
-  # 人口統計
-  # ═══════════════════════════════════════════════════════════════
-
-  - name: T02031_POPULATION_MONTHLY
-    description: >
-      熊本市の月次推計人口。性別（総数・男・女）×年次×月次で記録。
-      人口合計を取得する場合は 性別='総数' でフィルターする。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T02031_POPULATION_MONTHLY
-    dimensions:
-      - name: NIANCI
-        synonyms: ["年", "年次", "西暦", "年度"]
-        description: 統計の年次（例）2023
-        expr: '"年次"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次", "月別"]
-        description: 統計の月次（例）2023-04
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: XINGBIE
-        synonyms: ["性別", "男女"]
-        description: 性別区分。値 総数・男・女
-        expr: '"性別"'
-        data_type: VARCHAR
-    measures:
-      - name: JINKO
-        synonyms: ["人口", "推計人口", "住民数"]
-        description: 推計人口（人）。性別='総数' でフィルターして合計するのが基本。
-        expr: '"人数【人】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  - name: T02040_BIRTHS_DEATHS_MONTHLY
-    description: >
-      熊本市の月次出生・死亡統計。種別（出生・死亡）×性別×年次×月次で記録。
-      出生数は 種別='出生' AND 性別='総数'、死亡数は 種別='死亡' AND 性別='総数' でフィルター。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T02040_BIRTHS_DEATHS_MONTHLY
-    dimensions:
-      - name: NIANCI
-        synonyms: ["年", "年次"]
-        description: 統計の年次
-        expr: '"年次"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: ZHONGBIE
-        synonyms: ["種別", "区分"]
-        description: 統計の種別。値 出生・死亡
-        expr: '"種別"'
-        data_type: VARCHAR
-      - name: XINGBIE
-        synonyms: ["性別"]
-        description: 性別区分。値 総数・男・女
-        expr: '"性別"'
-        data_type: VARCHAR
-    measures:
-      - name: SHIZEN_DOTAI
-        synonyms: ["自然動態", "出生死亡数"]
-        description: 出生または死亡の人数（人）
-        expr: '"人数【人】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  - name: T02050_MIGRATION_MARRIAGE_MONTHLY
-    description: >
-      熊本市の月次社会動態（転入・転出）と婚姻・離婚件数。
-      種別（転入・転出・婚姻・離婚）×性別×年次×月次で記録。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T02050_MIGRATION_MARRIAGE_MONTHLY
-    dimensions:
-      - name: NIANCI
-        synonyms: ["年", "年次"]
-        description: 統計の年次
-        expr: '"年次"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: ZHONGBIE
-        synonyms: ["種別", "区分"]
-        description: 種別。値 転入・転出・婚姻・離婚
-        expr: '"種別"'
-        data_type: VARCHAR
-      - name: XINGBIE
-        synonyms: ["性別"]
-        description: 性別区分
-        expr: '"性別"'
-        data_type: VARCHAR
-    measures:
-      - name: SHAKAI_DOTAI
-        synonyms: ["転入転出数", "件数", "婚姻離婚件数"]
-        description: 転入・転出の人数または婚姻・離婚の件数
-        expr: '"人数【人】又は件数【件】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  # ═══════════════════════════════════════════════════════════════
-  # 交通
-  # ═══════════════════════════════════════════════════════════════
-
-  - name: T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
-    description: >
-      熊本市電の月次乗車人数と乗車料収入。総数・定期・定期外の3区分で記録。
-      合計値は 総数/定期/定期外='総数' でフィルターして取得。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
-    dimensions:
-      - name: NIANDU
-        synonyms: ["年度", "年", "会計年度"]
-        description: 統計の年度（例）2023
-        expr: '"年度"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: ZONGSHU_DINGQI_DINGQIWAI
-        synonyms: ["定期区分", "乗車種別", "総数定期定期外"]
-        description: 乗車種別。値 総数・定期・定期外
-        expr: '"総数/定期/定期外"'
-        data_type: VARCHAR
-    measures:
-      - name: JOSHARENSHU
-        synonyms: ["乗車人数", "乗客数", "市電利用者"]
-        description: 市電の乗車人数（人）
-        expr: '"乗車人数【人】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-      - name: JOSHARYOSHOURU
-        synonyms: ["乗車料収入", "収入", "運賃収入"]
-        description: 乗車料収入（円）
-        expr: '"乗車料収入【円】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  - name: T11052_TRAM_OPERATION_STATS_MONTHLY
-    description: >
-      熊本市電の月次運行統計。営業路線延長・在籍車両数・使用車両数・運転キロ数。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T11052_TRAM_OPERATION_STATS_MONTHLY
-    dimensions:
-      - name: NIANDU
-        synonyms: ["年度"]
-        description: 運行データの年度
-        expr: '"年度"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-    measures:
-      - name: EIGYO_ROSEN_KM
-        synonyms: ["営業路線", "路線延長"]
-        description: 営業路線の延長（km）
-        expr: '"営業路線【km】"::FLOAT'
-        data_type: NUMBER
-        default_aggregation: avg
-      - name: ZAIJI_SHARYO
-        synonyms: ["在籍車両数", "保有車両"]
-        description: 在籍車両数（両）
-        expr: '"在籍車両数【両】"::INT'
-        data_type: NUMBER
-        default_aggregation: avg
-      - name: UNTEN_KIRO
-        synonyms: ["運転キロ数", "走行距離"]
-        description: 運転キロ数（千km）
-        expr: '"運転キロ数【千km】"::FLOAT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  - name: T11031_AIRPORT_PASSENGERS_MONTHLY
-    description: >
-      熊本空港の月次乗降客数。乗客（搭乗）と降客（到着）の区分で記録。
-      合計を求める場合は両方を SUM するか乗客/降客 列でフィルターする。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T11031_AIRPORT_PASSENGERS_MONTHLY
-    dimensions:
-      - name: NIANDU
-        synonyms: ["年度", "年"]
-        description: 統計の年度
-        expr: '"年度"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: CHENGKE_JIANGKE
-        synonyms: ["乗降区分", "乗客降客"]
-        description: 乗客（搭乗）または降客（到着）の区分
-        expr: '"乗客/降客"'
-        data_type: VARCHAR
-    measures:
-      - name: KUKO_RYOKAKUSU
-        synonyms: ["乗降客数", "旅客数", "空港利用者"]
-        description: 空港の乗降客数（人）
-        expr: '"人数【人】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  # ═══════════════════════════════════════════════════════════════
-  # 文化施設
-  # ═══════════════════════════════════════════════════════════════
-
-  - name: T18172_MUSEUM_VISITORS_MONTHLY
-    description: >
-      熊本博物館の月次入館者数。分類（総数など）×大人/小中学生の区分で記録。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T18172_MUSEUM_VISITORS_MONTHLY
-    primary_key:
-      columns:
-        - NIANDU
-        - YUECI
-        - FENLEI
-        - DAREN_XIAOZHONGXUESHENG
-    dimensions:
-      - name: NIANDU
-        synonyms: ["年度", "年"]
-        description: 統計の年度
-        expr: '"年度"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: FENLEI
-        synonyms: ["分類", "展示区分"]
-        description: 博物館の区分・展示分類
-        expr: '"分類"'
-        data_type: VARCHAR
-      - name: DAREN_XIAOZHONGXUESHENG
-        synonyms: ["入館者区分", "大人小中学生"]
-        description: 入館者の区分。値 大人・小中学生
-        expr: '"大人/小中学生"'
-        data_type: VARCHAR
-    measures:
-      - name: HAKUBUTSUKAN_NYUKAN
-        synonyms: ["博物館入館者数", "博物館来館者", "博物館利用者"]
-        description: 博物館の入館者数（人）
-        expr: '"人数【人】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  - name: T18201_ZOO_MONTHLY_OVERVIEW
-    description: >
-      熊本市動植物園の月次概況。開園日数・入園者総数・1日平均入園者数。
-      年度×月次で1レコード（主キー）。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T18201_ZOO_MONTHLY_OVERVIEW
-    primary_key:
-      columns:
-        - NIANDU
-        - YUECI
-    dimensions:
-      - name: NIANDU
-        synonyms: ["年度", "年"]
-        description: 統計の年度
-        expr: '"年度"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-    measures:
-      - name: KAIEN_NISSHU
-        synonyms: ["開園日数"]
-        description: 動植物園の開園日数（日）
-        expr: '"開園日数【日】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-      - name: ZOO_NYUEN_SHA
-        synonyms: ["動植物園入園者数", "動植物園来園者", "zoo入園者"]
-        description: 動植物園の入園者総数（人）
-        expr: '"入園者総数【人】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-      - name: ZOO_ICHINICHI_HEIKIN
-        synonyms: ["1日平均入園者", "日平均来園者"]
-        description: 1日平均入園者数（人/日）
-        expr: '"1日平均入園者【人/日】"::FLOAT'
-        data_type: NUMBER
-        default_aggregation: avg
-
-  # ═══════════════════════════════════════════════════════════════
-  # 防災・安全
-  # ═══════════════════════════════════════════════════════════════
-
-  - name: T15191_FIRE_INCIDENTS_DAMAGE
-    description: >
-      熊本市消防局管内の月次火災件数と損害。種別（建物・林野・車両・船舶・航空機・その他・計）で記録。
-      合計は 種別='計' でフィルター。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T15191_FIRE_INCIDENTS_DAMAGE
-    dimensions:
-      - name: NIANCI
-        synonyms: ["年次", "年"]
-        description: 統計の年次
-        expr: '"年次"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: ZHONGBIE
-        synonyms: ["種別", "火災種別"]
-        description: 火災の種別。値 建物・林野・車両・その他・計
-        expr: '"種別"'
-        data_type: VARCHAR
-    measures:
-      - name: KASAI_KENSHU
-        synonyms: ["火災件数", "火災発生件数", "火事件数"]
-        description: 火災件数（件）
-        expr: '"件数"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-      - name: KASAI_SONHAIGAKU
-        synonyms: ["損害額", "火災損害", "被害額"]
-        description: 火災による損害額（円）
-        expr: '"損害額【円】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  - name: T15120_TRAFFIC_ACCIDENTS_BY_STATION
-    description: >
-      警察署管轄別・月次の交通事故件数・死者数・傷者数。
-      件数/死者/傷者 列の値（件数・死者数・傷者数）でフィルターして集計。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T15120_TRAFFIC_ACCIDENTS_BY_STATION
-    dimensions:
-      - name: NIANCI
-        synonyms: ["年次", "年"]
-        description: 統計の年次
-        expr: '"年次"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: GUANXIA
-        synonyms: ["管轄", "警察署", "管轄警察署"]
-        description: 警察署の管轄区域名
-        expr: '"管轄"'
-        data_type: VARCHAR
-      - name: JIANSHU_SIZHE_SHANGZHE
-        synonyms: ["統計区分", "件数死者傷者区分"]
-        description: 統計の種別。値 件数・死者数・傷者数
-        expr: '"件数/死者/傷者"'
-        data_type: VARCHAR
-    measures:
-      - name: KOTSU_JIKO
-        synonyms: ["交通事故件数", "事故件数", "死傷者数"]
-        description: 交通事故の件数または死傷者数
-        expr: '"件数【件】・人数【人】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  # ═══════════════════════════════════════════════════════════════
-  # 環境・生活インフラ
-  # ═══════════════════════════════════════════════════════════════
-
-  - name: T13180_WASTE_PROCESSING_MONTHLY
-    description: >
-      熊本市の月次ごみ処理概況。収集量・搬入量・処理量の区分、ごみの種別（燃やすごみ・粗大ごみ等）で記録。
-      収集量は 収集および搬入量/処理量='収集' でフィルター。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T13180_WASTE_PROCESSING_MONTHLY
-    dimensions:
-      - name: NIANDU
-        synonyms: ["年度", "年"]
-        description: 統計の年度
-        expr: '"年度"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: SHOUJI_CHULI
-        synonyms: ["処理区分", "収集搬入処理区分"]
-        description: 収集および搬入量または処理量の区分
-        expr: '"収集および搬入量/処理量"'
-        data_type: VARCHAR
-      - name: ZHONGBIE
-        synonyms: ["種別", "ごみ種別"]
-        description: ごみの種別（燃やすごみ・粗大ごみ等）
-        expr: '"種別"'
-        data_type: VARCHAR
-    measures:
-      - name: GOMI_SURYO
-        synonyms: ["ごみ量", "廃棄物量", "ごみ収集量", "ごみ処理量"]
-        description: ごみの量（t）
-        expr: '"数量【t】"::FLOAT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  - name: T08080_WATER_SUPPLY_BY_PURPOSE
-    description: >
-      熊本市の年度別・用途別の上水道使用状況。家事用・営業用・工場用等の区分で件数と水量を記録。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T08080_WATER_SUPPLY_BY_PURPOSE
-    dimensions:
-      - name: NIANDU
-        synonyms: ["年度", "年"]
-        description: 統計の年度
-        expr: '"年度"'
-        data_type: VARCHAR
-      - name: YONGTU
-        synonyms: ["用途", "水道用途", "使用用途"]
-        description: 水道の使用用途（家事用・営業用・工場用等）
-        expr: '"用途"'
-        data_type: VARCHAR
-    measures:
-      - name: SUIDO_KENSHU
-        synonyms: ["件数", "戸数", "世帯数"]
-        description: 水道使用の件数（戸）
-        expr: '"延戸(件)数【件】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-      - name: SUIDO_SURYO
-        synonyms: ["水量", "使用水量", "給水量"]
-        description: 使用水量（m3）
-        expr: '"水量【m3】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  # ═══════════════════════════════════════════════════════════════
-  # 経済・労働
-  # ═══════════════════════════════════════════════════════════════
-
-  - name: T09011_HOUSEHOLD_MONTHLY_EXPENDITURE
-    description: >
-      熊本市の家計調査報告による月次家計支出。大項目・中項目の費目分類で記録。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T09011_HOUSEHOLD_MONTHLY_EXPENDITURE
-    dimensions:
-      - name: NIANCI
-        synonyms: ["年次", "年"]
-        description: 統計の年次
-        expr: '"年次"'
-        data_type: VARCHAR
-      - name: YUECI
-        synonyms: ["月", "月次"]
-        description: 統計の月次
-        expr: '"月次"'
-        data_type: VARCHAR
-      - name: DAXIANGMU
-        synonyms: ["大項目", "支出大分類", "費目大項目"]
-        description: 家計支出の大分類（食料・住居・光熱水道等）
-        expr: '"大項目"'
-        data_type: VARCHAR
-      - name: ZHONGXIANGMU
-        synonyms: ["中項目", "支出中分類", "費目中項目"]
-        description: 家計支出の中分類
-        expr: '"中項目"'
-        data_type: VARCHAR
-    measures:
-      - name: KAKEI_SHICHU
-        synonyms: ["支出", "家計支出", "消費支出"]
-        description: 家計支出額（円）
-        expr: '"支出【円】"::INT'
-        data_type: NUMBER
-        default_aggregation: sum
-
-  - name: T12055_JOB_VACANCY_RATE_MONTHLY
-    description: >
-      熊本公共職業安定所調査による月次有効求人倍率・就職率・充足率。
-      種別（有効求人倍率（季節調整値）・有効求人倍率（パートタイムを除く）等）で記録。
-    base_table:
-      database: KUMAMOTO_OPENDATA
-      schema: PUBLIC
-      table: T12055_JOB_VACANCY_RATE_MONTHLY
-    dimensions:
-      - name: NIANDU
-        synonyms: ["年度", "年"]
-        description: 統計の年度
-        expr: '"年度"'
-        data_type: VARCHAR
-      - name: NIANYUE
-        synonyms: ["年月", "月"]
-        description: 統計の年月（例）2023-04
-        expr: '"年月"'
-        data_type: VARCHAR
-      - name: ZHONGBIE
-        synonyms: ["種別", "指標区分"]
-        description: 統計指標の種別（有効求人倍率・就職率・充足率等）
-        expr: '"種別"'
-        data_type: VARCHAR
-    measures:
-      - name: KYUJIN_BAIRITSU
-        synonyms: ["有効求人倍率", "求人倍率", "就職率", "充足率"]
-        description: 有効求人倍率または就職率・充足率の比率
-        expr: '"比率"::FLOAT'
-        data_type: NUMBER
-        default_aggregation: avg
-
-# ═══════════════════════════════════════════════════════════════════
-# リレーションシップ
-# 注: 多くのテーブルは月次×複数カテゴリでM:Mのため直接JOINは不可。
-#     クロステーブル分析はVQR（verified_queries）で対応。
-# ═══════════════════════════════════════════════════════════════════
+- name: T02031_POPULATION_MONTHLY
+  description: |
+    熊本市の月次推計人口。性別（総数・男・女）×年次×月次で記録。 人口合計を取得する場合は 性別='総数' でフィルターする。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T02031_POPULATION_MONTHLY
+  dimensions:
+  - name: NIANCI
+    synonyms:
+    - 年
+    - 年次
+    - 西暦
+    - 年度
+    description: 統計の年次（例）2023
+    expr: '"年次"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    - 月別
+    description: 統計の月次（例）2023-04
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: XINGBIE
+    synonyms:
+    - 性別
+    - 男女
+    description: 性別区分。値 総数・男・女
+    expr: '"性別"'
+    data_type: VARCHAR
+  measures:
+  - name: JINKO
+    synonyms:
+    - 人口
+    - 推計人口
+    - 住民数
+    description: 推計人口（人）。性別='総数' でフィルターして合計するのが基本。
+    expr: '"人数【人】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+- name: T02040_BIRTHS_DEATHS_MONTHLY
+  description: |
+    熊本市の月次出生・死亡統計。種別（出生・死亡）×性別×年次×月次で記録。 出生数は 種別='出生' AND 性別='総数'、死亡数は 種別='死亡' AND 性別='総数' でフィルター。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T02040_BIRTHS_DEATHS_MONTHLY
+  dimensions:
+  - name: NIANCI
+    synonyms:
+    - 年
+    - 年次
+    description: 統計の年次
+    expr: '"年次"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: ZHONGBIE
+    synonyms:
+    - 種別
+    - 区分
+    description: 統計の種別。値 出生・死亡
+    expr: '"種別"'
+    data_type: VARCHAR
+  - name: XINGBIE
+    synonyms:
+    - 性別
+    description: 性別区分。値 総数・男・女
+    expr: '"性別"'
+    data_type: VARCHAR
+  measures:
+  - name: SHIZEN_DOTAI
+    synonyms:
+    - 自然動態
+    - 出生死亡数
+    description: 出生または死亡の人数（人）
+    expr: '"人数【人】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+- name: T02050_MIGRATION_MARRIAGE_MONTHLY
+  description: |
+    熊本市の月次社会動態（転入・転出）と婚姻・離婚件数。 種別（転入・転出・婚姻・離婚）×性別×年次×月次で記録。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T02050_MIGRATION_MARRIAGE_MONTHLY
+  dimensions:
+  - name: NIANCI
+    synonyms:
+    - 年
+    - 年次
+    description: 統計の年次
+    expr: '"年次"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: ZHONGBIE
+    synonyms:
+    - 種別
+    - 区分
+    description: 種別。値 転入・転出・婚姻・離婚
+    expr: '"種別"'
+    data_type: VARCHAR
+  - name: XINGBIE
+    synonyms:
+    - 性別
+    description: 性別区分
+    expr: '"性別"'
+    data_type: VARCHAR
+  measures:
+  - name: SHAKAI_DOTAI
+    synonyms:
+    - 転入転出数
+    - 件数
+    - 婚姻離婚件数
+    description: 転入・転出の人数または婚姻・離婚の件数
+    expr: '"人数【人】又は件数【件】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+- name: T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
+  description: |
+    熊本市電の月次乗車人数と乗車料収入。総数・定期・定期外の3区分で記録。 合計値は 総数/定期/定期外='総数' でフィルターして取得。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
+  dimensions:
+  - name: NIANDU
+    synonyms:
+    - 年度
+    - 年
+    - 会計年度
+    description: 統計の年度（例）2023
+    expr: '"年度"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: ZONGSHU_DINGQI_DINGQIWAI
+    synonyms:
+    - 定期区分
+    - 乗車種別
+    - 総数定期定期外
+    description: 乗車種別。値 総数・定期・定期外
+    expr: '"総数/定期/定期外"'
+    data_type: VARCHAR
+  measures:
+  - name: JOSHARENSHU
+    synonyms:
+    - 乗車人数
+    - 乗客数
+    - 市電利用者
+    description: 市電の乗車人数（人）
+    expr: '"乗車人数【人】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+  - name: JOSHARYOSHOURU
+    synonyms:
+    - 乗車料収入
+    - 収入
+    - 運賃収入
+    description: 乗車料収入（円）
+    expr: '"乗車料収入【円】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+- name: T11052_TRAM_OPERATION_STATS_MONTHLY
+  description: |
+    熊本市電の月次運行統計。営業路線延長・在籍車両数・使用車両数・運転キロ数。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T11052_TRAM_OPERATION_STATS_MONTHLY
+  dimensions:
+  - name: NIANDU
+    synonyms:
+    - 年度
+    description: 運行データの年度
+    expr: '"年度"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  measures:
+  - name: EIGYO_ROSEN_KM
+    synonyms:
+    - 営業路線
+    - 路線延長
+    description: 営業路線の延長（km）
+    expr: '"営業路線【km】"::FLOAT'
+    data_type: NUMBER
+    default_aggregation: avg
+  - name: ZAIJI_SHARYO
+    synonyms:
+    - 在籍車両数
+    - 保有車両
+    description: 在籍車両数（両）
+    expr: '"在籍車両数【両】"::INT'
+    data_type: NUMBER
+    default_aggregation: avg
+  - name: UNTEN_KIRO
+    synonyms:
+    - 運転キロ数
+    - 走行距離
+    description: 運転キロ数（千km）
+    expr: '"運転キロ数【千km】"::FLOAT'
+    data_type: NUMBER
+    default_aggregation: sum
+  metrics:
+  - name: TRAM_TOTAL_DISTANCE_1000KM
+    description: 市電月次運転キロ数合計（千km）
+    synonyms:
+    - 市電運転キロ
+    - 走行距離
+    expr: SUM("運転キロ数【千km】"::FLOAT)
+    data_type: NUMBER
+- name: T11031_AIRPORT_PASSENGERS_MONTHLY
+  description: |
+    熊本空港の月次乗降客数。乗客（搭乗）と降客（到着）の区分で記録。 合計を求める場合は両方を SUM するか乗客/降客 列でフィルターする。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T11031_AIRPORT_PASSENGERS_MONTHLY
+  dimensions:
+  - name: NIANDU
+    synonyms:
+    - 年度
+    - 年
+    description: 統計の年度
+    expr: '"年度"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: CHENGKE_JIANGKE
+    synonyms:
+    - 乗降区分
+    - 乗客降客
+    description: 乗客（搭乗）または降客（到着）の区分
+    expr: '"乗客/降客"'
+    data_type: VARCHAR
+  measures:
+  - name: KUKO_RYOKAKUSU
+    synonyms:
+    - 乗降客数
+    - 旅客数
+    - 空港利用者
+    description: 空港の乗降客数（人）
+    expr: '"人数【人】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+- name: T18172_MUSEUM_VISITORS_MONTHLY
+  description: |
+    熊本博物館の月次入館者数。分類（総数など）×大人/小中学生の区分で記録。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T18172_MUSEUM_VISITORS_MONTHLY
+  primary_key:
+    columns:
+    - NIANDU
+    - YUECI
+    - FENLEI
+    - DAREN_XIAOZHONGXUESHENG
+  dimensions:
+  - name: NIANDU
+    synonyms:
+    - 年度
+    - 年
+    description: 統計の年度
+    expr: '"年度"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: FENLEI
+    synonyms:
+    - 分類
+    - 展示区分
+    description: 博物館の区分・展示分類
+    expr: '"分類"'
+    data_type: VARCHAR
+  - name: DAREN_XIAOZHONGXUESHENG
+    synonyms:
+    - 入館者区分
+    - 大人小中学生
+    description: 入館者の区分。値 大人・小中学生
+    expr: '"大人/小中学生"'
+    data_type: VARCHAR
+  measures:
+  - name: HAKUBUTSUKAN_NYUKAN
+    synonyms:
+    - 博物館入館者数
+    - 博物館来館者
+    - 博物館利用者
+    description: 博物館の入館者数（人）
+    expr: '"人数【人】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+- name: T18201_ZOO_MONTHLY_OVERVIEW
+  description: |
+    熊本市動植物園の月次概況。開園日数・入園者総数・1日平均入園者数。 年度×月次で1レコード（主キー）。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T18201_ZOO_MONTHLY_OVERVIEW
+  primary_key:
+    columns:
+    - NIANDU
+    - YUECI
+  dimensions:
+  - name: NIANDU
+    synonyms:
+    - 年度
+    - 年
+    description: 統計の年度
+    expr: '"年度"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  measures:
+  - name: KAIEN_NISSHU
+    synonyms:
+    - 開園日数
+    description: 動植物園の開園日数（日）
+    expr: '"開園日数【日】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+  - name: ZOO_NYUEN_SHA
+    synonyms:
+    - 動植物園入園者数
+    - 動植物園来園者
+    - zoo入園者
+    description: 動植物園の入園者総数（人）
+    expr: '"入園者総数【人】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+  - name: ZOO_ICHINICHI_HEIKIN
+    synonyms:
+    - 1日平均入園者
+    - 日平均来園者
+    description: 1日平均入園者数（人/日）
+    expr: '"1日平均入園者【人/日】"::FLOAT'
+    data_type: NUMBER
+    default_aggregation: avg
+  metrics:
+  - name: ZOO_VISITORS_TOTAL
+    description: 動植物園の月次入園者総数
+    synonyms:
+    - 動植物園入園者
+    - 動物園来場者
+    - 動植物園利用者
+    expr: SUM("入園者総数【人】"::INT)
+    data_type: NUMBER
+  - name: ZOO_OPEN_DAYS
+    description: 動植物園の月次開園日数
+    synonyms:
+    - 開園日数
+    expr: SUM("開園日数【日】"::INT)
+    data_type: NUMBER
+- name: T15191_FIRE_INCIDENTS_DAMAGE
+  description: |
+    熊本市消防局管内の月次火災件数と損害。種別（建物・林野・車両・船舶・航空機・その他・計）で記録。 合計は 種別='計' でフィルター。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T15191_FIRE_INCIDENTS_DAMAGE
+  dimensions:
+  - name: NIANCI
+    synonyms:
+    - 年次
+    - 年
+    description: 統計の年次
+    expr: '"年次"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: ZHONGBIE
+    synonyms:
+    - 種別
+    - 火災種別
+    description: 火災の種別。値 建物・林野・車両・その他・計
+    expr: '"種別"'
+    data_type: VARCHAR
+  measures:
+  - name: KASAI_KENSHU
+    synonyms:
+    - 火災件数
+    - 火災発生件数
+    - 火事件数
+    description: 火災件数（件）
+    expr: '"件数"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+  - name: KASAI_SONHAIGAKU
+    synonyms:
+    - 損害額
+    - 火災損害
+    - 被害額
+    description: 火災による損害額（円）
+    expr: '"損害額【円】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+  metrics:
+  - name: FIRE_INCIDENTS_TOTAL
+    description: 火災件数合計（全種別）
+    synonyms:
+    - 火災件数
+    - 火事件数
+    - 火災発生件数
+    expr: SUM("件数"::INT)
+    data_type: NUMBER
+  - name: FIRE_DAMAGE_YEN
+    description: 火災損害額合計（円）
+    synonyms:
+    - 火災損害額
+    - 火災被害額
+    - 損害額
+    expr: SUM("損害額【円】"::INT)
+    data_type: NUMBER
+- name: T15120_TRAFFIC_ACCIDENTS_BY_STATION
+  description: |
+    警察署管轄別・月次の交通事故件数・死者数・傷者数。 件数/死者/傷者 列の値（件数・死者数・傷者数）でフィルターして集計。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T15120_TRAFFIC_ACCIDENTS_BY_STATION
+  dimensions:
+  - name: NIANCI
+    synonyms:
+    - 年次
+    - 年
+    description: 統計の年次
+    expr: '"年次"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: GUANXIA
+    synonyms:
+    - 管轄
+    - 警察署
+    - 管轄警察署
+    description: 警察署の管轄区域名
+    expr: '"管轄"'
+    data_type: VARCHAR
+  - name: JIANSHU_SIZHE_SHANGZHE
+    synonyms:
+    - 統計区分
+    - 件数死者傷者区分
+    description: 統計の種別。値 件数・死者数・傷者数
+    expr: '"件数/死者/傷者"'
+    data_type: VARCHAR
+  measures:
+  - name: KOTSU_JIKO
+    synonyms:
+    - 交通事故件数
+    - 事故件数
+    - 死傷者数
+    description: 交通事故の件数または死傷者数
+    expr: '"件数【件】・人数【人】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+- name: T13180_WASTE_PROCESSING_MONTHLY
+  description: |
+    熊本市の月次ごみ処理概況。収集量・搬入量・処理量の区分、ごみの種別（燃やすごみ・粗大ごみ等）で記録。 収集量は 収集および搬入量/処理量='収集' でフィルター。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T13180_WASTE_PROCESSING_MONTHLY
+  dimensions:
+  - name: NIANDU
+    synonyms:
+    - 年度
+    - 年
+    description: 統計の年度
+    expr: '"年度"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: SHOUJI_CHULI
+    synonyms:
+    - 処理区分
+    - 収集搬入処理区分
+    description: 収集および搬入量または処理量の区分
+    expr: '"収集および搬入量/処理量"'
+    data_type: VARCHAR
+  - name: ZHONGBIE
+    synonyms:
+    - 種別
+    - ごみ種別
+    description: ごみの種別（燃やすごみ・粗大ごみ等）
+    expr: '"種別"'
+    data_type: VARCHAR
+  measures:
+  - name: GOMI_SURYO
+    synonyms:
+    - ごみ量
+    - 廃棄物量
+    - ごみ収集量
+    - ごみ処理量
+    description: ごみの量（t）
+    expr: '"数量【t】"::FLOAT'
+    data_type: NUMBER
+    default_aggregation: sum
+- name: T08080_WATER_SUPPLY_BY_PURPOSE
+  description: |
+    熊本市の年度別・用途別の上水道使用状況。家事用・営業用・工場用等の区分で件数と水量を記録。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T08080_WATER_SUPPLY_BY_PURPOSE
+  dimensions:
+  - name: NIANDU
+    synonyms:
+    - 年度
+    - 年
+    description: 統計の年度
+    expr: '"年度"'
+    data_type: VARCHAR
+  - name: YONGTU
+    synonyms:
+    - 用途
+    - 水道用途
+    - 使用用途
+    description: 水道の使用用途（家事用・営業用・工場用等）
+    expr: '"用途"'
+    data_type: VARCHAR
+  measures:
+  - name: SUIDO_KENSHU
+    synonyms:
+    - 件数
+    - 戸数
+    - 世帯数
+    description: 水道使用の件数（戸）
+    expr: '"延戸(件)数【件】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+  - name: SUIDO_SURYO
+    synonyms:
+    - 水量
+    - 使用水量
+    - 給水量
+    description: 使用水量（m3）
+    expr: '"水量【m3】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+  metrics:
+  - name: TOTAL_WATER_VOLUME_M3
+    description: 上水道有収水量合計（m3）
+    synonyms:
+    - 水量
+    - 給水量
+    - 水道使用量
+    - 有収水量
+    expr: SUM("水量【m3】"::INT)
+    data_type: NUMBER
+- name: T09011_HOUSEHOLD_MONTHLY_EXPENDITURE
+  description: |
+    熊本市の家計調査報告による月次家計支出。大項目・中項目の費目分類で記録。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T09011_HOUSEHOLD_MONTHLY_EXPENDITURE
+  dimensions:
+  - name: NIANCI
+    synonyms:
+    - 年次
+    - 年
+    description: 統計の年次
+    expr: '"年次"'
+    data_type: VARCHAR
+  - name: YUECI
+    synonyms:
+    - 月
+    - 月次
+    description: 統計の月次
+    expr: '"月次"'
+    data_type: VARCHAR
+  - name: DAXIANGMU
+    synonyms:
+    - 大項目
+    - 支出大分類
+    - 費目大項目
+    description: 家計支出の大分類（食料・住居・光熱水道等）
+    expr: '"大項目"'
+    data_type: VARCHAR
+  - name: ZHONGXIANGMU
+    synonyms:
+    - 中項目
+    - 支出中分類
+    - 費目中項目
+    description: 家計支出の中分類
+    expr: '"中項目"'
+    data_type: VARCHAR
+  measures:
+  - name: KAKEI_SHICHU
+    synonyms:
+    - 支出
+    - 家計支出
+    - 消費支出
+    description: 家計支出額（円）
+    expr: '"支出【円】"::INT'
+    data_type: NUMBER
+    default_aggregation: sum
+- name: T12055_JOB_VACANCY_RATE_MONTHLY
+  description: |
+    熊本公共職業安定所調査による月次有効求人倍率・就職率・充足率。 種別（有効求人倍率（季節調整値）・有効求人倍率（パートタイムを除く）等）で記録。
+  base_table:
+    database: KUMAMOTO_OPENDATA
+    schema: PUBLIC
+    table: T12055_JOB_VACANCY_RATE_MONTHLY
+  dimensions:
+  - name: NIANDU
+    synonyms:
+    - 年度
+    - 年
+    description: 統計の年度
+    expr: '"年度"'
+    data_type: VARCHAR
+  - name: NIANYUE
+    synonyms:
+    - 年月
+    - 月
+    description: 統計の年月（例）2023-04
+    expr: '"年月"'
+    data_type: VARCHAR
+  - name: ZHONGBIE
+    synonyms:
+    - 種別
+    - 指標区分
+    description: 統計指標の種別（有効求人倍率・就職率・充足率等）
+    expr: '"種別"'
+    data_type: VARCHAR
+  measures:
+  - name: KYUJIN_BAIRITSU
+    synonyms:
+    - 有効求人倍率
+    - 求人倍率
+    - 就職率
+    - 充足率
+    description: 有効求人倍率または就職率・充足率の比率
+    expr: '"比率"::FLOAT'
+    data_type: NUMBER
+    default_aggregation: avg
 relationships:
-  - name: museum_to_zoo_monthly
-    left_table: T18172_MUSEUM_VISITORS_MONTHLY
-    right_table: T18201_ZOO_MONTHLY_OVERVIEW
-    join_type: inner
-    relationship_type: many_to_one
-    relationship_columns:
-      - left_column: NIANDU
-        right_column: NIANDU
-      - left_column: YUECI
-        right_column: YUECI
-
-# ═══════════════════════════════════════════════════════════════════
-# カスタムインストラクション
-# ═══════════════════════════════════════════════════════════════════
-custom_instructions: >
-  【データの特性と注意事項】
-  1. すべての数値列は VARCHAR 型で格納されているため、集計時には ::INT または ::FLOAT でキャストする。
-  2. 年次列（年次・年度）は文字列であるため、並び替えは ORDER BY ... DESC で年が新しい順になる。
-  3. 人口データ（T02031_POPULATION_MONTHLY）の合計人口は 性別='総数' でフィルターして取得する。
-  4. 市電データ（T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY）の合計は 総数/定期/定期外='総数' でフィルター。
+- name: museum_to_zoo_monthly
+  left_table: T18172_MUSEUM_VISITORS_MONTHLY
+  right_table: T18201_ZOO_MONTHLY_OVERVIEW
+  join_type: inner
+  relationship_type: many_to_one
+  relationship_columns:
+  - left_column: NIANDU
+    right_column: NIANDU
+  - left_column: YUECI
+    right_column: YUECI
+custom_instructions: |
+  【データの特性と注意事項】 1. すべての数値列は VARCHAR 型で格納されているため、集計時には ::INT または ::FLOAT でキャストする。 2. 年次列（年次・年度）は文字列であるため、並び替えは ORDER BY ... DESC で年が新しい順になる。 3. 人口データ（T02031_POPULATION_MONTHLY）の合計人口は 性別='総数' でフィルターして取得する。 4. 市電データ（T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY）の合計は 総数/定期/定期外='総数' でフィルター。
      定期・定期外の内訳を見る場合はそのままSUMしない（二重カウントになる）。
-  5. 火災データ（T15191_FIRE_INCIDENTS_DAMAGE）の合計件数は 種別='計' でフィルター。
-  6. 交通事故データ（T15120_TRAFFIC_ACCIDENTS_BY_STATION）は 件数/死者/傷者 列で件数・死者数・傷者数を区別。
-  7. 空港データ（T11031_AIRPORT_PASSENGERS_MONTHLY）は 乗客/降客 列で搭乗・到着を区別。
+  5. 火災データ（T15191_FIRE_INCIDENTS_DAMAGE）の合計件数は 種別='計' でフィルター。 6. 交通事故データ（T15120_TRAFFIC_ACCIDENTS_BY_STATION）は 件数/死者/傷者 列で件数・死者数・傷者数を区別。 7. 空港データ（T11031_AIRPORT_PASSENGERS_MONTHLY）は 乗客/降客 列で搭乗・到着を区別。
      全旅客数は両方をSUMするか乗客のみでフィルターする。
   8. 複数テーブルを跨ぐ質問（例 人口と市電利用者の相関）は、
      年次/年度・月次で LEFT JOIN して集計する。時系列の結合キーは
@@ -580,187 +716,166 @@ custom_instructions: >
      収集および搬入量/処理量='収集' でフィルター。
   10. 家計支出データ（T09011_HOUSEHOLD_MONTHLY_EXPENDITURE）は大項目別に
       SUM することで費目ごとの支出額を把握できる。
-
-# ═══════════════════════════════════════════════════════════════════
-# 検証済みクエリ（Verified Query Results）
-# ━━ 単一テーブル ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# ═══════════════════════════════════════════════════════════════════
 verified_queries:
+- name: 月次推計人口の推移
+  question: 熊本市の月次推計人口の直近の推移を教えて
+  sql: |
+    SELECT "年次", "月次", "人数【人】"::INT AS 推計人口
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T02031_POPULATION_MONTHLY
+    WHERE "性別" = '総数'
+    ORDER BY "年次" DESC, "月次" DESC
+    LIMIT 24
+- name: 市電年度別乗車人数と収入
+  question: 熊本市電の年度別乗車人数と乗車料収入はどのくらいか
+  sql: |
+    SELECT
+        "年度",
+        SUM("乗車人数【人】"::INT) AS 年間乗車人数,
+        SUM("乗車料収入【円】"::INT) AS 年間乗車料収入
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
+    WHERE "総数/定期/定期外" = '総数'
+    GROUP BY "年度"
+    ORDER BY "年度" DESC
+- name: 市電月次乗車人数推移
+  question: 熊本市電の直近の月次乗車人数の推移を教えて
+  sql: |
+    SELECT "年度", "月次", "乗車人数【人】"::INT AS 乗車人数
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
+    WHERE "総数/定期/定期外" = '総数'
+    ORDER BY "年度" DESC, "月次" DESC
+    LIMIT 24
+- name: 火災件数年次推移
+  question: 熊本市の火災件数の年次推移を教えて
+  sql: |
+    SELECT "年次", SUM("件数"::INT) AS 火災件数, SUM("損害額【円】"::INT) AS 総損害額
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T15191_FIRE_INCIDENTS_DAMAGE
 
-  - name: 月次推計人口の推移
-    question: 熊本市の月次推計人口の直近の推移を教えて
-    sql: |
-      SELECT "年次", "月次", "人数【人】"::INT AS 推計人口
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T02031_POPULATION_MONTHLY
-      WHERE "性別" = '総数'
-      ORDER BY "年次" DESC, "月次" DESC
-      LIMIT 24
-
-  - name: 市電年度別乗車人数と収入
-    question: 熊本市電の年度別乗車人数と乗車料収入はどのくらいか
-    sql: |
-      SELECT
-          "年度",
-          SUM("乗車人数【人】"::INT) AS 年間乗車人数,
-          SUM("乗車料収入【円】"::INT) AS 年間乗車料収入
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
-      WHERE "総数/定期/定期外" = '総数'
-      GROUP BY "年度"
-      ORDER BY "年度" DESC
-
-  - name: 市電月次乗車人数推移
-    question: 熊本市電の直近の月次乗車人数の推移を教えて
-    sql: |
-      SELECT "年度", "月次", "乗車人数【人】"::INT AS 乗車人数
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
-      WHERE "総数/定期/定期外" = '総数'
-      ORDER BY "年度" DESC, "月次" DESC
-      LIMIT 24
-
-  - name: 火災件数年次推移
-    question: 熊本市の火災件数の年次推移を教えて
-    sql: |
-      SELECT "年次", SUM("件数"::INT) AS 火災件数, SUM("損害額【円】"::INT) AS 総損害額
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T15191_FIRE_INCIDENTS_DAMAGE
-      WHERE "種別" = '計'
-      GROUP BY "年次"
-      ORDER BY "年次" DESC
-
-  - name: 博物館動植物園月次入館者数
-    question: 熊本博物館と動植物園の月次入館者数を見せて
-    sql: |
-      SELECT
-          m."年度",
-          m."月次",
-          SUM(m."人数【人】"::INT) AS 博物館入館者数,
-          MAX(z."入園者総数【人】"::INT) AS 動植物園入園者数
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T18172_MUSEUM_VISITORS_MONTHLY m
-      LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T18201_ZOO_MONTHLY_OVERVIEW z
-          ON m."年度" = z."年度" AND m."月次" = z."月次"
-      GROUP BY m."年度", m."月次"
-      ORDER BY m."年度" DESC, m."月次" DESC
-      LIMIT 24
-
-  - name: 月次ごみ収集量推移
-    question: 熊本市の月次ごみ収集量の推移を教えて
-    sql: |
-      SELECT "年度", "月次", SUM("数量【t】"::FLOAT) AS ごみ収集量_t
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T13180_WASTE_PROCESSING_MONTHLY
-      WHERE "収集および搬入量/処理量" = '収集'
-      GROUP BY "年度", "月次"
-      ORDER BY "年度" DESC, "月次" DESC
-      LIMIT 24
-
-  - name: 有効求人倍率推移
-    question: 熊本市の有効求人倍率の直近の推移を教えて
-    sql: |
-      SELECT "年度", "年月", "比率"::FLOAT AS 有効求人倍率
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T12055_JOB_VACANCY_RATE_MONTHLY
-      WHERE "種別" = '有効求人倍率（季節調整値）'
-      ORDER BY "年度" DESC, "年月" DESC
-      LIMIT 24
-
-  - name: 家計支出費目別年次
-    question: 熊本市の費目別家計支出の年次推移を教えて
-    sql: |
-      SELECT "年次", "大項目", SUM("支出【円】"::INT) AS 年間支出額
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T09011_HOUSEHOLD_MONTHLY_EXPENDITURE
-      GROUP BY "年次", "大項目"
-      ORDER BY "年次" DESC, 年間支出額 DESC
-
-  # ━━ クロステーブルクエリ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  - name: 人口と出生死亡の月次推移
-    question: 熊本市の人口・出生数・死亡数の月次推移を一覧で見せて
-    sql: |
-      SELECT
-          p."年次",
-          p."月次",
-          MAX(CASE WHEN p."性別" = '総数' THEN p."人数【人】"::INT END) AS 推計人口,
-          SUM(CASE WHEN bd."種別" = '出生' AND bd."性別" = '総数'
-                   THEN bd."人数【人】"::INT ELSE 0 END) AS 出生数,
-          SUM(CASE WHEN bd."種別" = '死亡' AND bd."性別" = '総数'
-                   THEN bd."人数【人】"::INT ELSE 0 END) AS 死亡数,
-          MAX(CASE WHEN p."性別" = '総数' THEN p."人数【人】"::INT END)
-              - LAG(MAX(CASE WHEN p."性別" = '総数' THEN p."人数【人】"::INT END))
-                  OVER (ORDER BY p."年次", p."月次") AS 人口増減
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T02031_POPULATION_MONTHLY p
-      LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T02040_BIRTHS_DEATHS_MONTHLY bd
-          ON p."年次" = bd."年次" AND p."月次" = bd."月次"
-      GROUP BY p."年次", p."月次"
-      ORDER BY p."年次" DESC, p."月次" DESC
-      LIMIT 24
-
-  - name: 市電と空港の月次輸送量比較
-    question: 熊本市電の乗車人数と熊本空港の乗降客数を月次で比較して
-    sql: |
-      SELECT
-          t."年度",
-          t."月次",
-          SUM(CASE WHEN t."総数/定期/定期外" = '総数'
-                   THEN t."乗車人数【人】"::INT ELSE 0 END) AS 市電乗車人数,
-          SUM(a."人数【人】"::INT) AS 空港乗降客数合計
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY t
-      LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T11031_AIRPORT_PASSENGERS_MONTHLY a
-          ON t."年度" = a."年度" AND t."月次" = a."月次"
-      GROUP BY t."年度", t."月次"
-      ORDER BY t."年度" DESC, t."月次" DESC
-      LIMIT 24
-
-  - name: 火災件数と交通事故件数の年次比較
-    question: 熊本市の火災件数と交通事故件数を年次で比較して
-    sql: |
-      SELECT
-          f."年次",
-          SUM(CASE WHEN f."種別" = '計' THEN f."件数"::INT ELSE 0 END) AS 火災件数,
-          SUM(CASE WHEN f."種別" = '計' THEN f."損害額【円】"::INT ELSE 0 END) AS 火災損害額,
-          SUM(CASE WHEN t."件数/死者/傷者" = '件数'
-                   THEN t."件数【件】・人数【人】"::INT ELSE 0 END) AS 交通事故件数,
-          SUM(CASE WHEN t."件数/死者/傷者" = '死者数'
-                   THEN t."件数【件】・人数【人】"::INT ELSE 0 END) AS 交通事故死者数
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T15191_FIRE_INCIDENTS_DAMAGE f
-      LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T15120_TRAFFIC_ACCIDENTS_BY_STATION t
-          ON f."年次" = t."年次" AND f."月次" = t."月次"
-      GROUP BY f."年次"
-      ORDER BY f."年次" DESC
-
-  - name: 人口とごみ収集量の年次推移
-    question: 熊本市の人口とごみ収集量の関係を年次で見せて
-    sql: |
-      SELECT
-          pop."年次",
-          SUM(CASE WHEN pop."性別" = '総数' THEN pop."人数【人】"::INT ELSE 0 END) / 12 AS 月平均推計人口,
-          SUM(CASE WHEN waste."収集および搬入量/処理量" = '収集'
-                   THEN waste."数量【t】"::FLOAT ELSE 0 END) AS 年間ごみ収集量_t
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T02031_POPULATION_MONTHLY pop
-      LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T13180_WASTE_PROCESSING_MONTHLY waste
-          ON pop."年次" = waste."年度" AND pop."月次" = waste."月次"
-      GROUP BY pop."年次"
-      ORDER BY pop."年次" DESC
-
-  - name: 市電定期定期外割合の年度推移
-    question: 熊本市電の定期利用者と定期外利用者の割合はどう変化しているか
-    sql: |
-      SELECT
-          "年度",
-          SUM(CASE WHEN "総数/定期/定期外" = '定期' THEN "乗車人数【人】"::INT ELSE 0 END) AS 定期乗車人数,
-          SUM(CASE WHEN "総数/定期/定期外" = '定期外' THEN "乗車人数【人】"::INT ELSE 0 END) AS 定期外乗車人数,
-          SUM(CASE WHEN "総数/定期/定期外" = '総数' THEN "乗車人数【人】"::INT ELSE 0 END) AS 総乗車人数,
-          ROUND(100.0 * SUM(CASE WHEN "総数/定期/定期外" = '定期' THEN "乗車人数【人】"::INT ELSE 0 END)
-              / NULLIF(SUM(CASE WHEN "総数/定期/定期外" = '総数' THEN "乗車人数【人】"::INT ELSE 0 END), 0), 1) AS 定期利用率_pct
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
-      GROUP BY "年度"
-      ORDER BY "年度" DESC
-
-  - name: 博物館と動植物園の年度別入館者比較
-    question: 熊本博物館と動植物園の年間入館者数を年度別に比較して
-    sql: |
-      SELECT
-          m."年度",
-          SUM(m."人数【人】"::INT) AS 博物館年間入館者数,
-          SUM(z."入園者総数【人】"::INT) AS 動植物園年間入園者数
-      FROM KUMAMOTO_OPENDATA.PUBLIC.T18172_MUSEUM_VISITORS_MONTHLY m
-      LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T18201_ZOO_MONTHLY_OVERVIEW z
-          ON m."年度" = z."年度" AND m."月次" = z."月次"
-      GROUP BY m."年度"
-      ORDER BY m."年度" DESC
+    GROUP BY "年次"
+    ORDER BY "年次" DESC
+- name: 博物館動植物園月次入館者数
+  question: 熊本博物館と動植物園の月次入館者数を見せて
+  sql: |
+    SELECT
+        m."年度",
+        m."月次",
+        SUM(m."人数【人】"::INT) AS 博物館入館者数,
+        MAX(z."入園者総数【人】"::INT) AS 動植物園入園者数
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T18172_MUSEUM_VISITORS_MONTHLY m
+    LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T18201_ZOO_MONTHLY_OVERVIEW z
+        ON m."年度" = z."年度" AND m."月次" = z."月次"
+    GROUP BY m."年度", m."月次"
+    ORDER BY m."年度" DESC, m."月次" DESC
+    LIMIT 24
+- name: 月次ごみ収集量推移
+  question: 熊本市の月次ごみ収集量の推移を教えて
+  sql: |
+    SELECT "年度", "月次", SUM("数量【t】"::FLOAT) AS ごみ収集量_t
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T13180_WASTE_PROCESSING_MONTHLY
+    WHERE "収集および搬入量/処理量" = '収集および搬入量'
+    GROUP BY "年度", "月次"
+    ORDER BY "年度" DESC, "月次" DESC
+    LIMIT 24
+- name: 有効求人倍率推移
+  question: 熊本市の有効求人倍率の直近の推移を教えて
+  sql: |
+    SELECT "年度", "年月", "比率"::FLOAT AS 有効求人倍率
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T12055_JOB_VACANCY_RATE_MONTHLY
+    WHERE "種別" = '有効求人倍率'
+    ORDER BY "年度" DESC, "年月" DESC
+    LIMIT 24
+- name: 家計支出費目別年次
+  question: 熊本市の費目別家計支出の年次推移を教えて
+  sql: |
+    SELECT "年次", "大項目", SUM("支出【円】"::INT) AS 年間支出額
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T09011_HOUSEHOLD_MONTHLY_EXPENDITURE
+    GROUP BY "年次", "大項目"
+    ORDER BY "年次" DESC, 年間支出額 DESC
+- name: 人口と出生死亡の月次推移
+  question: 熊本市の人口・出生数・死亡数の月次推移を一覧で見せて
+  sql: |
+    SELECT
+        p."年次",
+        p."月次",
+        MAX(CASE WHEN p."性別" = '総数' THEN p."人数【人】"::INT END) AS 推計人口,
+        SUM(CASE WHEN bd."種別" = '出生' AND bd."性別" = '総数'
+                 THEN bd."人数【人】"::INT ELSE 0 END) AS 出生数,
+        SUM(CASE WHEN bd."種別" = '死亡' AND bd."性別" = '総数'
+                 THEN bd."人数【人】"::INT ELSE 0 END) AS 死亡数,
+        MAX(CASE WHEN p."性別" = '総数' THEN p."人数【人】"::INT END)
+            - LAG(MAX(CASE WHEN p."性別" = '総数' THEN p."人数【人】"::INT END))
+                OVER (ORDER BY p."年次", p."月次") AS 人口増減
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T02031_POPULATION_MONTHLY p
+    LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T02040_BIRTHS_DEATHS_MONTHLY bd
+        ON p."年次" = bd."年次" AND p."月次" = bd."月次"
+    GROUP BY p."年次", p."月次"
+    ORDER BY p."年次" DESC, p."月次" DESC
+    LIMIT 24
+- name: 市電と空港の月次輸送量比較
+  question: 熊本市電の乗車人数と熊本空港の乗降客数を月次で比較して
+  sql: |
+    SELECT
+        t."年度",
+        t."月次",
+        SUM(CASE WHEN t."総数/定期/定期外" = '総数'
+                 THEN t."乗車人数【人】"::INT ELSE 0 END) AS 市電乗車人数,
+        SUM(a."人数【人】"::INT) AS 空港乗降客数合計
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY t
+    LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T11031_AIRPORT_PASSENGERS_MONTHLY a
+        ON t."年度" = a."年度" AND t."月次" = a."月次"
+    GROUP BY t."年度", t."月次"
+    ORDER BY t."年度" DESC, t."月次" DESC
+    LIMIT 24
+- name: 火災件数と交通事故件数の年次比較
+  question: 熊本市の火災件数と交通事故件数を年次で比較して
+  sql: |
+    SELECT
+        f."年次",
+        SUM(CASE WHEN f."種別" = '計' THEN f."件数"::INT ELSE 0 END) AS 火災件数,
+        SUM(CASE WHEN f."種別" = '計' THEN f."損害額【円】"::INT ELSE 0 END) AS 火災損害額,
+        SUM(CASE WHEN t."件数/死者/傷者" = '件数'
+                 THEN t."件数【件】・人数【人】"::INT ELSE 0 END) AS 交通事故件数,
+        SUM(CASE WHEN t."件数/死者/傷者" = '死者'
+                 THEN t."件数【件】・人数【人】"::INT ELSE 0 END) AS 交通事故死者数
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T15191_FIRE_INCIDENTS_DAMAGE f
+    LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T15120_TRAFFIC_ACCIDENTS_BY_STATION t
+        ON f."年次" = t."年次" AND f."月次" = t."月次"
+    GROUP BY f."年次"
+    ORDER BY f."年次" DESC
+- name: 人口とごみ収集量の年次推移
+  question: 熊本市の人口とごみ収集量の関係を年次で見せて
+  sql: |
+    SELECT
+        pop."年次",
+        SUM(CASE WHEN pop."性別" = '総数' THEN pop."人数【人】"::INT ELSE 0 END) / 12 AS 月平均推計人口,
+        SUM(CASE WHEN waste."収集および搬入量/処理量" = '収集および搬入量'
+                 THEN waste."数量【t】"::FLOAT ELSE 0 END) AS 年間ごみ収集量_t
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T02031_POPULATION_MONTHLY pop
+    LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T13180_WASTE_PROCESSING_MONTHLY waste
+        ON pop."年次" = waste."年度" AND pop."月次" = waste."月次"
+    GROUP BY pop."年次"
+    ORDER BY pop."年次" DESC
+- name: 市電定期定期外割合の年度推移
+  question: 熊本市電の定期利用者と定期外利用者の割合はどう変化しているか
+  sql: |
+    SELECT
+        "年度",
+        SUM(CASE WHEN "総数/定期/定期外" = '定期' THEN "乗車人数【人】"::INT ELSE 0 END) AS 定期乗車人数,
+        SUM(CASE WHEN "総数/定期/定期外" = '定期外' THEN "乗車人数【人】"::INT ELSE 0 END) AS 定期外乗車人数,
+        SUM(CASE WHEN "総数/定期/定期外" = '総数' THEN "乗車人数【人】"::INT ELSE 0 END) AS 総乗車人数,
+        ROUND(100.0 * SUM(CASE WHEN "総数/定期/定期外" = '定期' THEN "乗車人数【人】"::INT ELSE 0 END)
+            / NULLIF(SUM(CASE WHEN "総数/定期/定期外" = '総数' THEN "乗車人数【人】"::INT ELSE 0 END), 0), 1) AS 定期利用率_pct
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY
+    GROUP BY "年度"
+    ORDER BY "年度" DESC
+- name: 博物館と動植物園の年度別入館者比較
+  question: 熊本博物館と動植物園の年間入館者数を年度別に比較して
+  sql: |
+    SELECT
+        m."年度",
+        SUM(m."人数【人】"::INT) AS 博物館年間入館者数,
+        SUM(z."入園者総数【人】"::INT) AS 動植物園年間入園者数
+    FROM KUMAMOTO_OPENDATA.PUBLIC.T18172_MUSEUM_VISITORS_MONTHLY m
+    LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T18201_ZOO_MONTHLY_OVERVIEW z
+        ON m."年度" = z."年度" AND m."月次" = z."月次"
+    GROUP BY m."年度"
+    ORDER BY m."年度" DESC
