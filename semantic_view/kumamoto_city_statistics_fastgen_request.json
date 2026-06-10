@@ -1,0 +1,161 @@
+{
+  "json_proto": {
+    "name": "kumamoto_city_statistics",
+    "database": "KUMAMOTO_OPENDATA",
+    "schema": "PUBLIC",
+    "semanticDescription": "熊本市の各種統計データを自然言語で分析するためのセマンティックビュー。人口動態・交通・防災・文化施設・経済指標など多岐にわたる月次統計データを横断的に問い合わせることができる。",
+    "tables": [
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T02031_POPULATION_MONTHLY",
+        "columnNames": ["年次", "月次", "性別", "人数【人】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T02040_BIRTHS_DEATHS_MONTHLY",
+        "columnNames": ["年次", "月次", "種別", "性別", "人数【人】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T02050_MIGRATION_MARRIAGE_MONTHLY",
+        "columnNames": ["年次", "月次", "種別", "性別", "人数【人】又は件数【件】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY",
+        "columnNames": ["年度", "月次", "総数/定期/定期外", "乗車人数【人】", "乗車料収入【円】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T11052_TRAM_OPERATION_STATS_MONTHLY",
+        "columnNames": ["年度", "月次", "営業路線【km】", "在籍車両数【両】", "使用車両延数【両】", "運転キロ数【千km】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T11031_AIRPORT_PASSENGERS_MONTHLY",
+        "columnNames": ["年度", "月次", "乗客/降客", "人数【人】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T13180_WASTE_PROCESSING_MONTHLY",
+        "columnNames": ["年度", "月次", "収集および搬入量/処理量", "種別", "数量【t】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T18172_MUSEUM_VISITORS_MONTHLY",
+        "columnNames": ["年度", "月次", "分類", "大人/小中学生", "人数【人】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T18201_ZOO_MONTHLY_OVERVIEW",
+        "columnNames": ["年度", "月次", "開園日数【日】", "入園者総数【人】", "1日平均入園者【人/日】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T15191_FIRE_INCIDENTS_DAMAGE",
+        "columnNames": ["年次", "月次", "種別", "件数", "焼損面積【m2】※林野【a】", "損害額【円】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T15120_TRAFFIC_ACCIDENTS_BY_STATION",
+        "columnNames": ["年次", "月次", "管轄", "件数/死者/傷者", "件数【件】・人数【人】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T09011_HOUSEHOLD_MONTHLY_EXPENDITURE",
+        "columnNames": ["年次", "月次", "大項目", "中項目", "支出【円】"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T12055_JOB_VACANCY_RATE_MONTHLY",
+        "columnNames": ["年度", "年月", "種別", "比率"]
+      },
+      {
+        "database": "KUMAMOTO_OPENDATA",
+        "schema": "PUBLIC",
+        "table": "T08080_WATER_SUPPLY_BY_PURPOSE",
+        "columnNames": ["年度", "用途", "延戸(件)数【件】", "水量【m3】"]
+      }
+    ],
+    "sqlSource": {
+      "queries": [
+        {
+          "sqlText": "SELECT \"年次\", \"月次\", \"人数【人】\"::INT AS 推計人口 FROM KUMAMOTO_OPENDATA.PUBLIC.T02031_POPULATION_MONTHLY WHERE \"性別\" = '総数' ORDER BY \"年次\" DESC, \"月次\" DESC LIMIT 24",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本市の月次推計人口の直近2年間の推移を教えて"
+        },
+        {
+          "sqlText": "SELECT \"年度\", SUM(\"乗車人数【人】\"::INT) AS 年間乗車人数, SUM(\"乗車料収入【円】\"::INT) AS 年間収入 FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY WHERE \"総数/定期/定期外\" = '総数' GROUP BY \"年度\" ORDER BY \"年度\" DESC",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本市電の年度別乗車人数と収入はどのくらいか"
+        },
+        {
+          "sqlText": "SELECT p.\"年次\", p.\"月次\", MAX(CASE WHEN p.\"性別\" = '総数' THEN p.\"人数【人】\"::INT END) AS 推計人口, SUM(CASE WHEN bd.\"種別\" = '出生' AND bd.\"性別\" = '総数' THEN bd.\"人数【人】\"::INT END) AS 出生数, SUM(CASE WHEN bd.\"種別\" = '死亡' AND bd.\"性別\" = '総数' THEN bd.\"人数【人】\"::INT END) AS 死亡数 FROM KUMAMOTO_OPENDATA.PUBLIC.T02031_POPULATION_MONTHLY p LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T02040_BIRTHS_DEATHS_MONTHLY bd ON p.\"年次\" = bd.\"年次\" AND p.\"月次\" = bd.\"月次\" GROUP BY p.\"年次\", p.\"月次\" ORDER BY p.\"年次\" DESC, p.\"月次\" DESC LIMIT 24",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本市の月次推計人口・出生数・死亡数を一緒に見せて"
+        },
+        {
+          "sqlText": "SELECT t.\"年度\", t.\"月次\", SUM(CASE WHEN t.\"総数/定期/定期外\" = '総数' THEN t.\"乗車人数【人】\"::INT ELSE 0 END) AS 市電乗車人数, SUM(a.\"人数【人】\"::INT) AS 空港乗降客数 FROM KUMAMOTO_OPENDATA.PUBLIC.T11051_TRAM_RIDERSHIP_REVENUE_MONTHLY t LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T11031_AIRPORT_PASSENGERS_MONTHLY a ON t.\"年度\" = a.\"年度\" AND t.\"月次\" = a.\"月次\" GROUP BY t.\"年度\", t.\"月次\" ORDER BY t.\"年度\" DESC, t.\"月次\" DESC",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本市電の乗車人数と熊本空港の乗降客数を月次で比較して"
+        },
+        {
+          "sqlText": "SELECT f.\"年次\", SUM(CASE WHEN f.\"種別\" = '計' THEN f.\"件数\"::INT ELSE 0 END) AS 火災件数, SUM(CASE WHEN f.\"種別\" = '計' THEN f.\"損害額【円】\"::INT ELSE 0 END) AS 損害額, SUM(CASE WHEN t.\"件数/死者/傷者\" = '件数' THEN t.\"件数【件】・人数【人】\"::INT ELSE 0 END) AS 交通事故件数 FROM KUMAMOTO_OPENDATA.PUBLIC.T15191_FIRE_INCIDENTS_DAMAGE f LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T15120_TRAFFIC_ACCIDENTS_BY_STATION t ON f.\"年次\" = t.\"年次\" AND f.\"月次\" = t.\"月次\" GROUP BY f.\"年次\" ORDER BY f.\"年次\" DESC",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本市の年度別の火災件数と交通事故件数を比較して"
+        },
+        {
+          "sqlText": "SELECT m.\"年度\", SUM(m.\"人数【人】\"::INT) AS 博物館年間入館者数, SUM(z.\"入園者総数【人】\"::INT) AS 動植物園年間入園者数 FROM KUMAMOTO_OPENDATA.PUBLIC.T18172_MUSEUM_VISITORS_MONTHLY m LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T18201_ZOO_MONTHLY_OVERVIEW z ON m.\"年度\" = z.\"年度\" AND m.\"月次\" = z.\"月次\" GROUP BY m.\"年度\" ORDER BY m.\"年度\" DESC",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本博物館と動植物園の年間入館者数を年度別に比較して"
+        },
+        {
+          "sqlText": "SELECT \"年次\", \"月次\", \"大項目\", SUM(\"支出【円】\"::INT) AS 支出額 FROM KUMAMOTO_OPENDATA.PUBLIC.T09011_HOUSEHOLD_MONTHLY_EXPENDITURE GROUP BY \"年次\", \"月次\", \"大項目\" ORDER BY \"年次\" DESC, \"月次\" DESC, 支出額 DESC",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本市の世帯月次支出を費目別に教えて"
+        },
+        {
+          "sqlText": "SELECT \"年度\", \"月次\", SUM(\"数量【t】\"::FLOAT) AS ごみ収集量 FROM KUMAMOTO_OPENDATA.PUBLIC.T13180_WASTE_PROCESSING_MONTHLY WHERE \"収集および搬入量/処理量\" = '収集' GROUP BY \"年度\", \"月次\" ORDER BY \"年度\" DESC, \"月次\" DESC",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本市の月次ごみ収集量の推移を教えて"
+        },
+        {
+          "sqlText": "SELECT pop.\"年次\", SUM(CASE WHEN pop.\"性別\" = '総数' THEN pop.\"人数【人】\"::INT END) / 12 AS 月平均人口, SUM(CASE WHEN waste.\"収集および搬入量/処理量\" = '収集' THEN waste.\"数量【t】\"::FLOAT END) AS 年間ごみ収集量 FROM KUMAMOTO_OPENDATA.PUBLIC.T02031_POPULATION_MONTHLY pop LEFT JOIN KUMAMOTO_OPENDATA.PUBLIC.T13180_WASTE_PROCESSING_MONTHLY waste ON pop.\"年次\" = waste.\"年度\" AND pop.\"月次\" = waste.\"月次\" GROUP BY pop.\"年次\" ORDER BY pop.\"年次\" DESC",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本市の人口とごみ収集量の年次推移を合わせて教えて"
+        },
+        {
+          "sqlText": "SELECT \"年度\", \"年月\", \"比率\"::FLOAT AS 有効求人倍率 FROM KUMAMOTO_OPENDATA.PUBLIC.T12055_JOB_VACANCY_RATE_MONTHLY WHERE \"種別\" = '有効求人倍率（季節調整値）' ORDER BY \"年度\" DESC, \"年月\" DESC LIMIT 24",
+          "database": "KUMAMOTO_OPENDATA",
+          "schema": "PUBLIC",
+          "correspondingQuestion": "熊本市の有効求人倍率の直近2年の推移を教えて"
+        }
+      ]
+    },
+    "metadata": {
+      "warehouse": "COMPUTE_WH"
+    }
+  }
+}
