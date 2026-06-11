@@ -527,9 +527,9 @@ SELECT GET_DDL('SEMANTIC_VIEW', 'KUMAMOTO_OPENDATA.PUBLIC.KUMAMOTO_CITY_STATISTI
 -- ============================================================
 -- STEP 3-3: アクセス権限の付与
 -- ============================================================
--- Snowflake Intelligence が参照できるよう SELECT 権限を付与します。
-GRANT SELECT ON ALL TABLES IN SCHEMA KUMAMOTO_OPENDATA.PUBLIC TO ROLE PUBLIC;
-GRANT SELECT ON SEMANTIC VIEW KUMAMOTO_OPENDATA.PUBLIC.KUMAMOTO_CITY_STATISTICS TO ROLE PUBLIC;
+-- -- Snowflake Intelligence が参照できるよう SELECT 権限を付与します。
+-- GRANT SELECT ON ALL TABLES IN SCHEMA KUMAMOTO_OPENDATA.PUBLIC TO ROLE PUBLIC;
+-- GRANT SELECT ON SEMANTIC VIEW KUMAMOTO_OPENDATA.PUBLIC.KUMAMOTO_CITY_STATISTICS TO ROLE PUBLIC;
 
 -- ============================================================
 -- STEP 3 完了
