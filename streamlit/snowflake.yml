@@ -1,0 +1,9 @@
+definition_version: 1
+
+streamlit:
+  name: KUMAMOTO_DASHBOARD
+  stage: KUMAMOTO_OPENDATA.PUBLIC.STREAMLIT_STAGE
+  query_warehouse: COMPUTE_WH
+  main_file: kumamoto_dashboard.py
+  title: "熊本市オープンデータ ダッシュボード"
+  comment: "熊本市の統計データ（92テーブル）を6カテゴリで可視化するダッシュボード"
