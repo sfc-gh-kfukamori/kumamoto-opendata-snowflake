@@ -116,10 +116,10 @@ SHOW AGENTS IN SCHEMA KUMAMOTO_OPENDATA.PUBLIC;
 -- STEP 4-3: Agent へのアクセス権限付与
 -- ============================================================
 -- Snowflake Intelligence から Agent を使えるよう権限を付与します。
-GRANT USAGE ON AGENT KUMAMOTO_OPENDATA.PUBLIC.KUMAMOTO_CITY_STATS_AGENT TO ROLE PUBLIC;
+-- GRANT USAGE ON AGENT KUMAMOTO_OPENDATA.PUBLIC.KUMAMOTO_CITY_STATS_AGENT TO ROLE PUBLIC;
 
 
--- ============================================================
+-- -- ============================================================
 -- STEP 4 完了
 -- ============================================================
 -- ✅ Cortex Agent KUMAMOTO_CITY_STATS_AGENT が作成されました
