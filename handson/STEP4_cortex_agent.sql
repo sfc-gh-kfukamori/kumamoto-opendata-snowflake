@@ -74,16 +74,20 @@ CREATE OR REPLACE AGENT KUMAMOTO_OPENDATA.PUBLIC.KUMAMOTO_CITY_STATS_AGENT
       # Snowflake Intelligence の画面に表示されるサンプル質問
       # ユーザーがクリックするだけで問い合わせを試せます
       sample_questions:
-        - question: "熊本市の月次推計人口の推移を教えて"
-        - question: "熊本市電の年度別乗車人数と収入はどのくらいか"
-        - question: "熊本市の人口・出生数・死亡数を月次で一覧表示して"
-        - question: "熊本市電の乗車人数と熊本空港の乗降客数を月次で比較して"
-        - question: "熊本市の火災件数と交通事故件数を年次で比較して"
-        - question: "熊本博物館と動植物園の年間入館者数を年度別に比較して"
-        - question: "熊本市の有効求人倍率の直近の推移を教えて"
-        - question: "熊本市の月次ごみ収集量の推移を教えて"
-        - question: "熊本市の人口とごみ収集量の年次推移を合わせて教えて"
-        - question: "熊本市の費目別家計支出を教えて"
+        # ── Cortex Analyst（統計データ） ─────────────────────────
+        # TOTAL_POPULATION metric: 性別='総数'フィルタ込みの推計人口合計
+        - question: "月次の推計総人口はどのように推移していますか"
+        # TRAM_RIDERSHIP_TOTAL + TRAM_REVENUE_TOTAL metrics: 総数フィルタ込み
+        - question: "熊本市電の年度別乗車人数合計と乗車料収入の推移を教えて"
+        # museum_to_zoo_monthly relationship + MUSEUM_VISITORS_TOTAL / ZOO_VISITORS_TOTAL metrics
+        - question: "博物館と動植物園の月次入館者数を比較して"
+        # FIRE_INCIDENTS_TOTAL + FIRE_DAMAGE_YEN metrics: 全種別合計
+        - question: "火災件数と損害額の年次推移を見せて"
+        # JOB_VACANCY_RATE metric: 有効求人倍率
+        - question: "有効求人倍率の最近の推移を教えて"
+        # ZONGSHU_DINGQI_DINGQIWAI dimension + JOSHARENSHU fact: 定期・定期外の内訳
+        - question: "市電の定期利用者と定期外利用者の割合はどう変化しているか"
+
 
     tools:
       - tool_spec:
