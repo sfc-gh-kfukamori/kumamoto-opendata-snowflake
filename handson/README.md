@@ -4,12 +4,13 @@
 
 熊本市が公開しているオープンデータ統計（人口・交通・防災・文化・経済など）を
 Snowflake に取り込み、**Snowflake Intelligence** から自然言語で問い合わせできる
-環境を約 20〜30 分で構築します。
+環境を約 30〜45 分で構築します。
 
 **最終的にできること:**
-- 「熊本市の月次推計人口の推移を教えて」
-- 「市電の乗車人数と空港の乗降客数を月次で比較して」
-- 「火災件数と交通事故件数を年次で比較して」
+- 「熊本市の月次推計人口の推移を教えて」（統計データ）
+- 「市電の乗車人数と空港の乗降客数を月次で比較して」（統計データ横断）
+- 「熊本市の重点施策は何ですか?」（政策文書 PDF 検索）
+- 「火災件数の推移と防災対策は?」（統計 ＋ 政策文書を組み合わせて回答）
 
 ---
 
@@ -18,11 +19,13 @@ Snowflake に取り込み、**Snowflake Intelligence** から自然言語で問�
 ```
 handson/
 ├── README.md                ← このファイル
+├── STEP0_connect_github.sql GitHub リポジトリ連携（任意）
 ├── STEP1_setup.sql          インフラ設定（DB・Network Rule・EAI）
 ├── STEP2_ingest_data.sql    データ取込 SP 作成・実行
-├── STEP3_semantic_view.sql  Semantic View 作成（YAML 埋め込み済み）
+├── STEP3_semantic_view.sql  Semantic View 作成
 ├── STEP4_cortex_agent.sql   Cortex Agent 作成
-└── STEP5_demo_queries.sql   動作確認クエリ
+├── STEP5_demo_queries.sql   動作確認クエリ
+└── STEP6_cortex_search.sql  PDF Cortex Search 追加（発展編）
 ```
 
 ---
@@ -147,15 +150,47 @@ SQL でデータ・クエリを直接確認できます。
 │                                                              │
 │  STEP4: KUMAMOTO_CITY_STATS_AGENT ── Cortex Agent          │
 │    └→ Semantic View を Tool として使用                        │
+│                                                              │
+│  STEP6（発展）: KUMAMOTO_DOCS_STAGE ── 内部ステージ          │
+│    └→ PDF テキスト抽出（AI_PARSE_DOCUMENT）                   │
+│       → KUMAMOTO_DOCS_CHUNKS テーブル（チャンク分割）         │
+│       → KUMAMOTO_DOCS_SEARCH（Cortex Search Service）         │
+│       → Agent に cortex_search ツールとして追加               │
 └──────────────────────────────────────────────────────────────┘
                      │
                      ▼
 ┌──────────────────────────────────────────────────────────────┐
 │  Snowflake Intelligence                                      │
 │  「熊本市統計アナリスト」                                    │
-│  → 自然言語で熊本市統計データを横断分析                      │
+│  → 統計データの分析（Cortex Analyst）                        │
+│  → 政策文書の意味検索（Cortex Search）                       │
 └──────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## STEP 6: PDF Cortex Search 追加（発展編）
+
+### このステップでやること
+
+| 作成するオブジェクト | 役割 |
+|---|---|
+| `KUMAMOTO_DOCS_STAGE` | PDF ファイルを格納する内部ステージ |
+| `KUMAMOTO_DOCS_CHUNKS` | AI_PARSE_DOCUMENT で抽出・チャンク分割したテキスト |
+| `KUMAMOTO_DOCS_SEARCH` | 全文意味検索サービス（Cortex Search） |
+| Agent 更新 | 統計検索＋文書検索の両 Tool を持つ Agent に更新 |
+
+### 対象 PDF ファイル
+
+| ファイル名 | 内容 |
+|---|---|
+| `kumamoto_shiseigaiyo_2025.pdf` | 熊本市市政概要 2025 |
+| `Kumamoto_sougoukeikaku.pdf` | 熊本市総合計画 |
+
+### PDF アップロード方法
+
+`STEP6_cortex_search.sql` の **STEP 6-2** のコメントを参照してください。  
+Snowsight UI のドラッグ＆ドロップ、または SnowSQL の PUT コマンドが使えます。
 
 ---
 

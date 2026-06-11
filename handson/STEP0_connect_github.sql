@@ -150,6 +150,11 @@ LS @KUMAMOTO_OPENDATA.PUBLIC.KUMAMOTO_DEMO_REPO/branches/master/sproc/;
 -- ハンズオン STEP5（デモクエリ）を実行する場合:
 -- EXECUTE IMMEDIATE FROM @KUMAMOTO_OPENDATA.PUBLIC.KUMAMOTO_DEMO_REPO/branches/master/handson/STEP5_demo_queries.sql;
 
+-- ハンズオン STEP6（Cortex Search 追加・発展編）を実行する場合:
+-- ⚠️ STEP6 は PDF ファイルのアップロードが必要です。
+--    STEP6 のファイル内の STEP 6-2 のコメントを参照してアップロード後、実行してください。
+-- EXECUTE IMMEDIATE FROM @KUMAMOTO_OPENDATA.PUBLIC.KUMAMOTO_DEMO_REPO/branches/master/handson/STEP6_cortex_search.sql;
+
 
 -- ============================================================
 -- STEP 0 完了
