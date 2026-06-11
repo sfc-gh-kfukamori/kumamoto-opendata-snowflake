@@ -236,7 +236,6 @@ tables:
     - 市電運転キロ
     - 走行距離
     expr: SUM("運転キロ数【千km】"::FLOAT)
-    data_type: NUMBER
 - name: T11031_AIRPORT_PASSENGERS_MONTHLY
   description: |
     熊本空港の月次乗降客数。乗客（搭乗）と降客（到着）の区分で記録。 合計を求める場合は両方を SUM するか乗客/降客 列でフィルターする。
@@ -387,13 +386,11 @@ tables:
     - 動物園来場者
     - 動植物園利用者
     expr: SUM("入園者総数【人】"::INT)
-    data_type: NUMBER
   - name: ZOO_OPEN_DAYS
     description: 動植物園の月次開園日数
     synonyms:
     - 開園日数
     expr: SUM("開園日数【日】"::INT)
-    data_type: NUMBER
 - name: T15191_FIRE_INCIDENTS_DAMAGE
   description: |
     熊本市消防局管内の月次火災件数と損害。種別（建物・林野・車両・船舶・航空機・その他・計）で記録。 合計は 種別='計' でフィルター。
@@ -450,7 +447,6 @@ tables:
     - 火事件数
     - 火災発生件数
     expr: SUM("件数"::INT)
-    data_type: NUMBER
   - name: FIRE_DAMAGE_YEN
     description: 火災損害額合計（円）
     synonyms:
@@ -458,7 +454,6 @@ tables:
     - 火災被害額
     - 損害額
     expr: SUM("損害額【円】"::INT)
-    data_type: NUMBER
 - name: T15120_TRAFFIC_ACCIDENTS_BY_STATION
   description: |
     警察署管轄別・月次の交通事故件数・死者数・傷者数。 件数/死者/傷者 列の値（件数・死者数・傷者数）でフィルターして集計。
@@ -604,7 +599,6 @@ tables:
     - 水道使用量
     - 有収水量
     expr: SUM("水量【m3】"::INT)
-    data_type: NUMBER
 - name: T09011_HOUSEHOLD_MONTHLY_EXPENDITURE
   description: |
     熊本市の家計調査報告による月次家計支出。大項目・中項目の費目分類で記録。
